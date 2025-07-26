@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rakshabandhan 2025 - A Special Surprise for you</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-content">
+            <div class="rakhi-animation">
+                <div class="rakhi-circle"></div>
+                <div class="rakhi-thread"></div>
+            </div>
+            <h2>Loading Your Special Surprise...</h2>
+            <div class="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div id="main-container" class="hidden">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-content">
+                <h1 class="nav-title">Rakshabandhan 2025</h1>
+                <div class="nav-links">
+                    <button class="nav-link active" data-section="home">Home</button>
+                    <button class="nav-link" data-section="message">Special Message</button>
+                    <button class="nav-link" data-section="gallery">Photo Gallery</button>
+                    <button class="nav-link" data-section="wishes">Wishes</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Home Section -->
+        <section id="home" class="section active">
+            <div class="hero-container">
+                <div class="hero-content">
+                    <div class="title-animation">
+                        <h1 class="main-title">Happy Rakshabandhan</h1>
+                        <h2 class="subtitle">To My Dearest Sister</h2>
+                    </div>
+                    <div class="sister-info">
+                        <div class="sister-card">
+                            <div class="sister-avatar">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <h3>My favourite relative of the unfavourite family</h3>
+                            <p>My Best Friend & Confidante</p>
+                        </div>
+                    </div>
+                    <div class="cta-buttons">
+                        <button class="cta-btn primary" onclick="scrollToSection('message')">
+                            <i class="fas fa-envelope"></i>
+                            Read My Message
+                        </button>
+                        <button class="cta-btn secondary" onclick="scrollToSection('gallery')">
+                            <i class="fas fa-images"></i>
+                            View Our Photos
+                        </button>
+                    </div>
+                </div>
+                <div class="floating-elements">
+                    <div class="floating-rakhi">🎀</div>
+                    <div class="floating-heart">💖</div>
+                    <div class="floating-star">⭐</div>
+                    <div class="floating-rakhi">🎀</div>
+                    <div class="floating-heart">💖</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Special Message Section -->
+        <section id="message" class="section">
+            <div class="section-container">
+                <h2 class="section-title">Some silly words from your brother 🙃🙃</h2>
+                <div class="message-container">
+                    <div class="message-card">
+                        <div class="message-header">
+                            <i class="fas fa-heart"></i>
+                            <span>My dearest Didi</span>
+                        </div>
+                        <div class="message-content">
+                            <p>As I sit here writing this message, my heart is filled with gratitude for the beautiful bond we've built together. It's amazing how life works - we weren't very close growing up, but when I moved to Pune for engineering after my 12th, that's when our relationship truly blossomed and I am very grateful that happened.</p>
+                            
+                            <p>Remember those long phone calls during my engineering days? You were always there to listen, to support, and to share in my college adventures. Those conversations meant the world to me and helped me through some challenging times.</p>
+                            
+                            <p>When you got married last year, I was so proud yet so emotional. My sister was starting her own family, and I could see how happy you were. But you know what? Our bond only grew stronger. Distance can never break what we share.</p>
+                            
+                            <p>You've been married for almost a year now, and I can see how beautifully you've built your new life. That makes me the happiest brother in the world. You deserve all the love and happiness life has to offer.</p>
+                            
+                            <p>On this Rakshabandhan, I want you to know that no matter where life takes us, I will always be here for you. You're not just my sister, you're my best friend, my confidante, and my biggest supporter. Our bond is proof that sometimes the most beautiful relationships develop when we least expect them.</p>
+                            
+                            <p>Thank you for being the amazing sister you are. Thank you for all the love, laughter, and memories we've shared since we reconnected. Here's to many more years of our beautiful bond!</p>
+                            
+                            <p class="signature">With all my love,<br>Tera bhai anu-bomb ❤️</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Photo Gallery Section -->
+        <section id="gallery" class="section">
+            <div class="section-container">
+                <h2 class="section-title">Precious Memories</h2>
+                
+                <!-- Upload Section -->
+                <div class="upload-section">
+                    <div class="upload-card">
+                        <div class="upload-icon">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <h3>Add Your Photos</h3>
+                        <p>Share your memories by adding photos of us together</p>
+                        <label for="photo-upload" class="upload-btn">
+                            <i class="fas fa-upload"></i>
+                            Choose Photos
+                        </label>
+                        <input type="file" id="photo-upload" accept="image/*" multiple style="display: none;">
+                    </div>
+                </div>
+                
+                <div class="gallery-container">
+                    <h3 class="gallery-subtitle">Our Photo Collection</h3>
+                    <div class="gallery-grid" id="photo-gallery">
+                        <div class="gallery-item" data-caption="Engineering Days">
+                            <img src="IMG-20250727-WA0001.jpg" alt="Engineering Days" style="width: 100%; height: 250px; object-fit: cover;">
+                        </div>
+                        <div class="gallery-item" data-caption="Phone Call Memories">
+                            <img src="IMG-20250727-WA0002.jpg" alt="Phone Call Memories" style="width: 100%; height: 250px; object-fit: cover;">
+                        </div>
+                        <div class="gallery-item" data-caption="Growing Closer">
+                            <img src="IMG-20250727-WA0003.jpg" alt="Growing Closer" style="width: 100%; height: 250px; object-fit: cover;">
+                        </div>
+                        <div class="gallery-item" data-caption="Special Moments">
+                            <img src="IMG-20250727-WA0004.jpg" alt="Special Moments" style="width: 100%; height: 250px; object-fit: cover;">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="gallery-instructions">
+                    <p><i class="fas fa-info-circle"></i> Click "Choose Photos" to add your own memories to our collection!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Wishes Section -->
+        <section id="wishes" class="section">
+            <div class="section-container">
+                <h2 class="section-title">My Wishes for You</h2>
+                <div class="wishes-container">
+                    <div class="wish-card">
+                        <div class="wish-icon">💕</div>
+                        <h3>Love & Happiness</h3>
+                        <p>May your life be filled with endless love and happiness</p>
+                    </div>
+                    <div class="wish-card">
+                        <div class="wish-icon">🏠</div>
+                        <h3>Beautiful Home</h3>
+                        <p>May your home always be filled with laughter and warmth</p>
+                    </div>
+                    <div class="wish-card">
+                        <div class="wish-icon">🌟</div>
+                        <h3>Success & Prosperity</h3>
+                        <p>May all your dreams come true and you achieve great success</p>
+                    </div>
+                    <div class="wish-card">
+                        <div class="wish-icon">🛡️</div>
+                        <h3>Protection</h3>
+                        <p>I promise to always protect and support you, no matter what</p>
+                    </div>
+                    <div class="wish-card">
+                        <div class="wish-icon">🎉</div>
+                        <h3>Celebration</h3>
+                        <p>May every day be a celebration of your beautiful life</p>
+                    </div>
+                    <div class="wish-card">
+                        <div class="wish-icon">🌺</div>
+                        <h3>Health & Beauty</h3>
+                        <p>May you always stay healthy, beautiful, and full of life</p>
+                    </div>
+                </div>
+                <div class="final-message">
+                    <h3>Happy Rakshabandhan, Didi!</h3>
+                    <p>May our bond grow stronger with each passing year. You will always be my little sister, and I will always be your protective brother.</p>
+                    <div class="rakhi-tying-animation">
+                        <div class="rakhi-knot">🎀</div>
+                        <p>Tying this virtual rakhi with all my love</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>Made with ❤️ for you</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
