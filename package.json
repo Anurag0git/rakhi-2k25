@@ -1,0 +1,27 @@
+{
+  "name": "rakhi-2k25",
+  "version": "1.0.0",
+  "description": "A beautiful Rakshabandhan webapp for my sister",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve -s . -p $PORT",
+    "build": "echo 'Static site - no build required'",
+    "dev": "serve -s . -p 3000"
+  },
+  "keywords": [
+    "rakshabandhan",
+    "sister",
+    "webapp",
+    "html",
+    "css",
+    "javascript"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "serve": "^14.2.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+} 
