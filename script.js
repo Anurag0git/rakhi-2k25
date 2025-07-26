@@ -105,15 +105,76 @@ function createFloatingElements() {
 function initializeGallery() {
     const galleryItems = document.querySelectorAll('.gallery-item');
     
-    galleryItems.forEach(item => {
-        item.addEventListener('click', () => {
-            const caption = item.getAttribute('data-caption');
-            showImageModal(caption);
-        });
+    // Debug: Log the number of gallery items found
+    console.log(`Found ${galleryItems.length} gallery items`);
+    
+    galleryItems.forEach((item, index) => {
+        const img = item.querySelector('img');
+        const placeholder = item.querySelector('.placeholder-photo');
+        const caption = item.getAttribute('data-caption') || `Photo ${index + 1}`;
+        
+        // Debug: Log each item
+        console.log(`Gallery item ${index + 1}: ${caption} - ${img ? 'Has image' : 'Placeholder'}`);
+        
+        if (img) {
+            // Add error handling for images
+            img.addEventListener('error', function() {
+                console.error(`Failed to load image: ${this.src}`);
+                this.style.display = 'none';
+                item.innerHTML = `
+                    <div class="placeholder-photo">
+                        <i class="fas fa-image"></i>
+                        <small>Click to add your photo</small>
+                    </div>
+                `;
+                // Make the new placeholder clickable
+                const newPlaceholder = item.querySelector('.placeholder-photo');
+                if (newPlaceholder) {
+                    newPlaceholder.addEventListener('click', () => {
+                        document.getElementById('photo-upload').click();
+                    });
+                }
+            });
+            
+            // Add load success handler
+            img.addEventListener('load', function() {
+                console.log(`Successfully loaded image: ${this.src}`);
+            });
+            
+            // Add click to enlarge for images
+            item.addEventListener('click', () => {
+                if (img && img.src) {
+                    showImageModal(caption, img.src);
+                }
+            });
+        }
+        
+        if (placeholder) {
+            // Make placeholder clickable to trigger file upload
+            placeholder.addEventListener('click', () => {
+                document.getElementById('photo-upload').click();
+            });
+        }
     });
+    
+    // Verify all images are present
+    setTimeout(() => {
+        const loadedImages = document.querySelectorAll('.gallery-item img');
+        const placeholders = document.querySelectorAll('.gallery-item .placeholder-photo');
+        console.log(`Total loaded images: ${loadedImages.length}`);
+        console.log(`Total placeholders: ${placeholders.length}`);
+        
+        loadedImages.forEach((img, index) => {
+            if (img.complete && img.naturalHeight !== 0) {
+                console.log(`Image ${index + 1} loaded successfully: ${img.src}`);
+            } else {
+                console.warn(`Image ${index + 1} may not have loaded: ${img.src}`);
+            }
+        });
+    }, 1000);
 }
 
-function showImageModal(caption) {
+function showImageModal(caption, imageSrc) {
     const modal = document.createElement('div');
     modal.className = 'image-modal';
     modal.innerHTML = `
@@ -123,10 +184,7 @@ function showImageModal(caption) {
                 <button class="close-btn">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="placeholder-photo">
-                    <i class="fas fa-image"></i>
-                    <p>Add your photo here</p>
-                </div>
+                <img src="${imageSrc}" alt="${caption}" style="max-width: 100%; height: auto; border-radius: 10px;">
             </div>
         </div>
     `;
@@ -139,27 +197,58 @@ function showImageModal(caption) {
         height: 100%;
         background: rgba(0, 0, 0, 0.8);
         display: flex;
-        justify-content: center;
         align-items: center;
-        z-index: 10000;
-        opacity: 0;
-        transition: opacity 0.3s ease;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(5px);
     `;
     
-    document.body.appendChild(modal);
+    const modalContent = modal.querySelector('.modal-content');
+    modalContent.style.cssText = `
+        background: white;
+        border-radius: 20px;
+        max-width: 90%;
+        max-height: 90%;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    `;
     
-    setTimeout(() => {
-        modal.style.opacity = '1';
-    }, 10);
+    const modalHeader = modal.querySelector('.modal-header');
+    modalHeader.style.cssText = `
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid #eee;
+    `;
+    
+    const modalBody = modal.querySelector('.modal-body');
+    modalBody.style.cssText = `
+        padding: 20px;
+        text-align: center;
+    `;
+    
+    const closeBtn = modal.querySelector('.close-btn');
+    closeBtn.style.cssText = `
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #666;
+        padding: 5px;
+    `;
+    
+    closeBtn.addEventListener('click', () => {
+        document.body.removeChild(modal);
+    });
     
     modal.addEventListener('click', (e) => {
-        if (e.target === modal || e.target.classList.contains('close-btn')) {
-            modal.style.opacity = '0';
-            setTimeout(() => {
-                document.body.removeChild(modal);
-            }, 300);
+        if (e.target === modal) {
+            document.body.removeChild(modal);
         }
     });
+    
+    document.body.appendChild(modal);
 }
 
 // Special effects
@@ -307,62 +396,137 @@ function initializePhotoUpload() {
                     const reader = new FileReader();
                     
                     reader.onload = function(e) {
-                        // Create new gallery item
-                        const galleryItem = document.createElement('div');
-                        galleryItem.className = 'gallery-item uploaded-photo';
-                        galleryItem.setAttribute('data-caption', 'Your Memory');
+                        // Find an empty placeholder to replace
+                        const placeholders = photoGallery.querySelectorAll('.placeholder-photo');
+                        let replaced = false;
                         
-                        // Create image element
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.alt = 'Your Memory';
-                        img.style.width = '100%';
-                        img.style.height = '100%';
-                        img.style.objectFit = 'cover';
+                        for (let j = 0; j < placeholders.length; j++) {
+                            const placeholder = placeholders[j];
+                            const galleryItem = placeholder.closest('.gallery-item');
+                            
+                            // Check if this placeholder hasn't been replaced yet
+                            if (galleryItem && !galleryItem.classList.contains('uploaded-photo')) {
+                                // Replace placeholder with uploaded image
+                                galleryItem.classList.add('uploaded-photo');
+                                galleryItem.innerHTML = '';
+                                
+                                // Create image element
+                                const img = document.createElement('img');
+                                img.src = e.target.result;
+                                img.alt = 'Your Memory';
+                                img.style.width = '100%';
+                                img.style.height = '100%';
+                                img.style.objectFit = 'cover';
+                                
+                                // Create delete button
+                                const deleteBtn = document.createElement('button');
+                                deleteBtn.className = 'delete-photo-btn';
+                                deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+                                deleteBtn.title = 'Delete this photo';
+                                
+                                // Add delete functionality
+                                deleteBtn.addEventListener('click', function(e) {
+                                    e.stopPropagation(); // Prevent image modal from opening
+                                    deletePhoto(galleryItem);
+                                });
+                                
+                                // Add image to gallery item
+                                galleryItem.appendChild(img);
+                                galleryItem.appendChild(deleteBtn);
+                                
+                                // Add animation
+                                galleryItem.style.opacity = '0';
+                                galleryItem.style.transform = 'scale(0.8)';
+                                
+                                setTimeout(() => {
+                                    galleryItem.style.transition = 'all 0.5s ease';
+                                    galleryItem.style.opacity = '1';
+                                    galleryItem.style.transform = 'scale(1)';
+                                }, 100);
+                                
+                                // Add hover effect
+                                galleryItem.addEventListener('mouseenter', function() {
+                                    this.style.transform = 'scale(1.03)';
+                                    deleteBtn.style.opacity = '1';
+                                });
+                                
+                                galleryItem.addEventListener('mouseleave', function() {
+                                    this.style.transform = 'scale(1)';
+                                    deleteBtn.style.opacity = '0';
+                                });
+                                
+                                // Add click to enlarge
+                                galleryItem.addEventListener('click', function() {
+                                    showImageModal('Your Memory', e.target.result);
+                                });
+                                
+                                replaced = true;
+                                break;
+                            }
+                        }
                         
-                        // Create delete button
-                        const deleteBtn = document.createElement('button');
-                        deleteBtn.className = 'delete-photo-btn';
-                        deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
-                        deleteBtn.title = 'Delete this photo';
+                        // If no placeholder was found, add as new item
+                        if (!replaced) {
+                            // Create new gallery item
+                            const galleryItem = document.createElement('div');
+                            galleryItem.className = 'gallery-item uploaded-photo';
+                            galleryItem.setAttribute('data-caption', 'Your Memory');
+                            
+                            // Create image element
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.alt = 'Your Memory';
+                            img.style.width = '100%';
+                            img.style.height = '100%';
+                            img.style.objectFit = 'cover';
+                            
+                            // Create delete button
+                            const deleteBtn = document.createElement('button');
+                            deleteBtn.className = 'delete-photo-btn';
+                            deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+                            deleteBtn.title = 'Delete this photo';
+                            
+                            // Add delete functionality
+                            deleteBtn.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                deletePhoto(galleryItem);
+                            });
+                            
+                            // Add image to gallery item
+                            galleryItem.appendChild(img);
+                            galleryItem.appendChild(deleteBtn);
+                            
+                            // Add to gallery with animation
+                            galleryItem.style.opacity = '0';
+                            galleryItem.style.transform = 'scale(0.8)';
+                            photoGallery.appendChild(galleryItem);
+                            
+                            // Animate in
+                            setTimeout(() => {
+                                galleryItem.style.transition = 'all 0.5s ease';
+                                galleryItem.style.opacity = '1';
+                                galleryItem.style.transform = 'scale(1)';
+                            }, 100);
+                            
+                            // Add hover effect
+                            galleryItem.addEventListener('mouseenter', function() {
+                                this.style.transform = 'scale(1.03)';
+                                deleteBtn.style.opacity = '1';
+                            });
+                            
+                            galleryItem.addEventListener('mouseleave', function() {
+                                this.style.transform = 'scale(1)';
+                                deleteBtn.style.opacity = '0';
+                            });
+                            
+                            // Add click to enlarge
+                            galleryItem.addEventListener('click', function() {
+                                showImageModal('Your Memory', e.target.result);
+                            });
+                        }
                         
-                        // Add delete functionality
-                        deleteBtn.addEventListener('click', function(e) {
-                            e.stopPropagation(); // Prevent image modal from opening
-                            deletePhoto(galleryItem);
-                        });
-                        
-                        // Add image to gallery item
-                        galleryItem.appendChild(img);
-                        galleryItem.appendChild(deleteBtn);
-                        
-                        // Add to gallery with animation
-                        galleryItem.style.opacity = '0';
-                        galleryItem.style.transform = 'scale(0.8)';
-                        photoGallery.appendChild(galleryItem);
-                        
-                        // Animate in
-                        setTimeout(() => {
-                            galleryItem.style.transition = 'all 0.5s ease';
-                            galleryItem.style.opacity = '1';
-                            galleryItem.style.transform = 'scale(1)';
-                        }, 100);
-                        
-                        // Add hover effect
-                        galleryItem.addEventListener('mouseenter', function() {
-                            this.style.transform = 'scale(1.03)';
-                            deleteBtn.style.opacity = '1';
-                        });
-                        
-                        galleryItem.addEventListener('mouseleave', function() {
-                            this.style.transform = 'scale(1)';
-                            deleteBtn.style.opacity = '0';
-                        });
-                        
-                        // Add click to enlarge
-                        galleryItem.addEventListener('click', function() {
-                            showImageModal('Your Memory', e.target.result);
-                        });
+                        // Save to localStorage
+                        saveUploadedPhotos();
                         
                         // Show success message
                         showUploadSuccess();
@@ -373,7 +537,7 @@ function initializePhotoUpload() {
             }
             
             // Clear the input
-            photoUpload.value = '';
+            event.target.value = '';
         });
     }
 }
@@ -489,10 +653,52 @@ function deletePhoto(galleryItem) {
         galleryItem.style.opacity = '0';
         galleryItem.style.transform = 'scale(0.8)';
         
-        // Remove after animation
+        // Remove after animation and restore placeholder
         setTimeout(() => {
             if (galleryItem.parentNode) {
+                // Get the index of the deleted item
+                const photoGallery = document.getElementById('photo-gallery');
+                const items = Array.from(photoGallery.children);
+                const deletedIndex = items.indexOf(galleryItem);
+                
+                // Remove the uploaded photo
                 galleryItem.parentNode.removeChild(galleryItem);
+                
+                // Restore placeholder at the same position
+                const placeholder = document.createElement('div');
+                placeholder.className = 'placeholder-photo';
+                placeholder.innerHTML = `
+                    <i class="fas fa-image"></i>
+                    <small>Click to add your photo</small>
+                `;
+                
+                // Make placeholder clickable
+                placeholder.addEventListener('click', () => {
+                    document.getElementById('photo-upload').click();
+                });
+                
+                // Create new gallery item with placeholder
+                const newGalleryItem = document.createElement('div');
+                newGalleryItem.className = 'gallery-item';
+                newGalleryItem.setAttribute('data-caption', `Photo ${deletedIndex + 1}`);
+                newGalleryItem.appendChild(placeholder);
+                
+                // Insert at the same position
+                if (deletedIndex < items.length) {
+                    photoGallery.insertBefore(newGalleryItem, items[deletedIndex]);
+                } else {
+                    photoGallery.appendChild(newGalleryItem);
+                }
+                
+                // Animate in the new placeholder
+                newGalleryItem.style.opacity = '0';
+                newGalleryItem.style.transform = 'scale(0.8)';
+                setTimeout(() => {
+                    newGalleryItem.style.transition = 'all 0.5s ease';
+                    newGalleryItem.style.opacity = '1';
+                    newGalleryItem.style.transform = 'scale(1)';
+                }, 100);
+                
                 saveUploadedPhotos(); // Update localStorage
                 showDeleteSuccess();
             }
@@ -551,9 +757,62 @@ document.addEventListener('DOMContentLoaded', () => {
     initializePhotoUpload();
     loadUploadedPhotos();
     
+    // Initialize message observer
+    const messageSection = document.getElementById('message');
+    if (messageSection) {
+        messageObserver.observe(messageSection);
+    }
+    
+    // Verify all images are loaded after a delay
+    setTimeout(() => {
+        verifyAllImagesLoaded();
+    }, 2000);
+    
     // Save photos when page is about to unload
     window.addEventListener('beforeunload', saveUploadedPhotos);
 });
+
+// Verify all images are loaded
+function verifyAllImagesLoaded() {
+    const galleryItems = document.querySelectorAll('#photo-gallery .gallery-item');
+    console.log(`Verifying ${galleryItems.length} gallery items...`);
+    
+    let loadedCount = 0;
+    let errorCount = 0;
+    
+    galleryItems.forEach((item, index) => {
+        const img = item.querySelector('img');
+        if (img) {
+            if (img.complete && img.naturalHeight !== 0) {
+                loadedCount++;
+                console.log(`✅ Image ${index + 1} loaded successfully: ${img.src}`);
+            } else {
+                errorCount++;
+                console.error(`❌ Image ${index + 1} failed to load: ${img.src}`);
+                
+                // Create fallback
+                item.innerHTML = `
+                    <div class="placeholder-photo">
+                        <i class="fas fa-image"></i>
+                        <p>Photo ${index + 1}</p>
+                        <small>Click to add your photo</small>
+                    </div>
+                `;
+                
+                // Make it clickable to add photo
+                item.addEventListener('click', () => {
+                    document.getElementById('photo-upload').click();
+                });
+            }
+        }
+    });
+    
+    console.log(`📊 Image loading summary: ${loadedCount} loaded, ${errorCount} failed`);
+    
+    if (errorCount > 0) {
+        console.warn(`⚠️ ${errorCount} images failed to load. Check file paths and ensure all images are in the repository.`);
+    }
+}
 
 // Parallax effect for floating elements
 window.addEventListener('scroll', () => {
@@ -566,27 +825,6 @@ window.addEventListener('scroll', () => {
     });
 });
 
-// Add typing effect to message
-function typeWriter(element, text, speed = 50) {
-    return new Promise((resolve) => {
-        let i = 0;
-        const originalText = element.textContent;
-        element.textContent = '';
-        
-        function type() {
-            if (i < text.length) {
-                element.textContent += text.charAt(i);
-                i++;
-                setTimeout(type, speed);
-            } else {
-                resolve();
-            }
-        }
-        
-        type();
-    });
-}
-
 // Initialize typing effect when message section is shown
 const messageObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
@@ -595,13 +833,16 @@ const messageObserver = new IntersectionObserver((entries) => {
             if (messageContent && !messageContent.classList.contains('typed')) {
                 messageContent.classList.add('typed');
                 
-                // Store original text and clear content
+                // Store original texts
                 const paragraphs = messageContent.querySelectorAll('p');
                 const originalTexts = Array.from(paragraphs).map(p => p.textContent);
                 
-                // Clear all paragraphs first
+                // Clear all paragraphs first and ensure no cursor styling
                 paragraphs.forEach(p => {
                     p.textContent = '';
+                    p.style.borderRight = 'none';
+                    p.style.animation = 'none';
+                    p.classList.remove('typing-complete');
                 });
                 
                 // Type each paragraph sequentially
@@ -609,10 +850,13 @@ const messageObserver = new IntersectionObserver((entries) => {
                 
                 function typeNextParagraph() {
                     if (currentIndex < paragraphs.length) {
-                        typeWriter(paragraphs[currentIndex], originalTexts[currentIndex], 30)
+                        const isMobile = window.innerWidth <= 768;
+                        const typingSpeed = isMobile ? 50 : 40;
+                        
+                        typeWriter(paragraphs[currentIndex], originalTexts[currentIndex], typingSpeed)
                             .then(() => {
                                 currentIndex++;
-                                setTimeout(typeNextParagraph, 500); // Wait 500ms between paragraphs
+                                setTimeout(typeNextParagraph, 800); // Wait 800ms between paragraphs
                             });
                     }
                 }
@@ -621,14 +865,51 @@ const messageObserver = new IntersectionObserver((entries) => {
             }
         }
     });
-}, { threshold: 0.5 });
-
-document.addEventListener('DOMContentLoaded', () => {
-    const messageSection = document.getElementById('message');
-    if (messageSection) {
-        messageObserver.observe(messageSection);
-    }
+}, { 
+    threshold: 0.2, // Lower threshold for better triggering
+    rootMargin: '0px 0px -100px 0px' // Trigger earlier
 });
+
+// Improved typewriter function - NO CURSOR
+function typeWriter(element, text, speed = 50) {
+    return new Promise((resolve) => {
+        let i = 0;
+        element.textContent = '';
+        
+        function type() {
+            if (i < text.length) {
+                element.textContent += text.charAt(i);
+                i++;
+                setTimeout(type, speed);
+            } else {
+                element.classList.add('typing-complete');
+                resolve();
+            }
+        }
+        
+        type();
+    });
+}
+
+// Add cursor blink animation
+const cursorStyle = document.createElement('style');
+cursorStyle.textContent = `
+    @keyframes blink {
+        0%, 50% { border-right-color: #ffd93d; }
+        51%, 100% { border-right-color: transparent; }
+    }
+    
+    .message-content.typed p {
+        border-right: 2px solid #ffd93d;
+        animation: blink 1s infinite;
+    }
+    
+    .message-content.typed p.typing-complete {
+        border-right: none;
+        animation: none;
+    }
+`;
+document.head.appendChild(cursorStyle);
 
 // Add celebration effect on special interactions
 function celebrate() {
@@ -644,15 +925,16 @@ function celebrate() {
         z-index: 10000;
         animation: celebration 3s ease-out forwards;
         pointer-events: none;
-    `;
-    
-    document.body.appendChild(celebration);
-    
-    setTimeout(() => {
-        if (celebration.parentNode) {
-            document.body.removeChild(celebration);
-        }
-    }, 3000);
+    }
+`;
+
+document.body.appendChild(celebration);
+
+setTimeout(() => {
+    if (celebration.parentNode) {
+        document.body.removeChild(celebration);
+    }
+}, 3000);
 }
 
 // Add celebration CSS
@@ -739,4 +1021,4 @@ const progressInterval = setInterval(() => {
         clearInterval(progressInterval);
     }
     updateLoadingProgress(progress);
-}, 200); 
+}, 200);

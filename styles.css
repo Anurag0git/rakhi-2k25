@@ -364,6 +364,22 @@ body {
     font-weight: 600;
 }
 
+/* Message content styling - NO CURSOR EFFECTS */
+.message-content.typed p {
+    position: relative;
+}
+
+.message-content.typed p.typing-complete {
+    /* No special styling */
+}
+
+/* Ensure message text is readable during typing */
+.message-content p {
+    min-height: 1.5em;
+    line-height: 1.8;
+    margin-bottom: 20px;
+}
+
 /* Gallery */
 .gallery-container {
     margin-top: 40px;
@@ -464,6 +480,7 @@ body {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     transition: transform 0.3s ease;
     aspect-ratio: 3/4;
+    min-height: 300px;
 }
 
 .gallery-item:hover {
@@ -519,20 +536,45 @@ body {
 }
 
 .placeholder-photo {
-    height: 250px;
-    background: linear-gradient(45deg, rgba(255, 107, 157, 0.2), rgba(255, 142, 83, 0.2));
+    height: 100%;
+    background: linear-gradient(45deg, rgba(255, 107, 157, 0.1), rgba(255, 142, 83, 0.1));
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     color: white;
     border: 2px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    padding: 20px;
+}
+
+.placeholder-photo:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+    background: linear-gradient(45deg, rgba(255, 107, 157, 0.2), rgba(255, 142, 83, 0.2));
+    transform: scale(1.02);
 }
 
 .placeholder-photo i {
     font-size: 48px;
     margin-bottom: 15px;
     opacity: 0.7;
+    color: #ff6b9d;
+}
+
+.placeholder-photo p {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: white;
+}
+
+.placeholder-photo small {
+    font-size: 12px;
+    opacity: 0.8;
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .gallery-instructions {
@@ -650,61 +692,240 @@ body {
     .nav-links {
         flex-wrap: wrap;
         justify-content: center;
+        gap: 10px;
+    }
+    
+    .nav-link {
+        font-size: 14px;
+        padding: 6px 12px;
     }
     
     .main-title {
-        font-size: 48px;
+        font-size: 42px;
+        line-height: 1.2;
     }
     
     .subtitle {
-        font-size: 24px;
+        font-size: 20px;
+        line-height: 1.3;
     }
     
     .cta-buttons {
         flex-direction: column;
         align-items: center;
+        gap: 15px;
+    }
+    
+    .cta-btn {
+        padding: 12px 24px;
+        font-size: 16px;
+        width: 100%;
+        max-width: 280px;
+        justify-content: center;
     }
     
     .gallery-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-        padding: 0 15px;
+        gap: 12px;
+        padding: 0 10px;
     }
     
     .gallery-item {
         aspect-ratio: 3/4;
+        min-height: 200px;
+    }
+    
+    .upload-card {
+        padding: 25px 20px;
+        margin: 0 10px;
+    }
+    
+    .upload-card h3 {
+        font-size: 20px;
+    }
+    
+    .upload-card p {
+        font-size: 14px;
+    }
+    
+    .upload-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+    }
+    
+    .gallery-subtitle {
+        font-size: 24px;
+        margin-bottom: 20px;
     }
     
     .wishes-container {
         grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 0 10px;
+    }
+    
+    .wish-card {
+        padding: 25px 20px;
+    }
+    
+    .wish-card h3 {
+        font-size: 18px;
+    }
+    
+    .wish-card p {
+        font-size: 14px;
+    }
+    
+    .message-card {
+        padding: 25px 20px;
+        margin: 0 10px;
+    }
+    
+    .message-content p {
+        font-size: 15px;
+        line-height: 1.7;
+        margin-bottom: 18px;
+    }
+    
+    .section-title {
+        font-size: 36px;
+        margin-bottom: 30px;
+        line-height: 1.2;
+    }
+    
+    .section {
+        padding: 80px 10px 40px;
     }
 }
 
 @media (max-width: 480px) {
     .section {
-        padding: 80px 15px 30px;
+        padding: 70px 8px 30px;
     }
     
     .main-title {
-        font-size: 36px;
-    }
-    
-    .section-title {
         font-size: 32px;
     }
     
+    .subtitle {
+        font-size: 18px;
+    }
+    
+    .section-title {
+        font-size: 28px;
+        margin-bottom: 25px;
+    }
+    
     .message-card {
-        padding: 25px;
+        padding: 20px 15px;
+    }
+    
+    .message-content p {
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 15px;
     }
     
     .gallery-grid {
         grid-template-columns: 1fr;
         gap: 15px;
-        padding: 0 10px;
+        padding: 0 8px;
     }
     
     .gallery-item {
         aspect-ratio: 4/5;
+        min-height: 250px;
+    }
+    
+    .upload-card {
+        padding: 20px 15px;
+        margin: 0 8px;
+    }
+    
+    .upload-card h3 {
+        font-size: 18px;
+    }
+    
+    .upload-card p {
+        font-size: 13px;
+    }
+    
+    .upload-btn {
+        padding: 10px 20px;
+        font-size: 13px;
+    }
+    
+    .gallery-subtitle {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+    
+    .wish-card {
+        padding: 20px 15px;
+    }
+    
+    .wish-card h3 {
+        font-size: 16px;
+    }
+    
+    .wish-card p {
+        font-size: 13px;
+    }
+    
+    .nav-title {
+        font-size: 22px;
+    }
+    
+    .nav-link {
+        font-size: 13px;
+        padding: 5px 10px;
+    }
+    
+    .cta-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+}
+
+/* Android-specific fixes */
+@media (max-width: 360px) {
+    .main-title {
+        font-size: 28px;
+    }
+    
+    .subtitle {
+        font-size: 16px;
+    }
+    
+    .section-title {
+        font-size: 24px;
+    }
+    
+    .message-content p {
+        font-size: 13px;
+    }
+    
+    .gallery-item {
+        min-height: 200px;
+    }
+}
+
+/* Ensure proper viewport handling */
+@media screen and (max-width: 768px) {
+    .hero-container {
+        min-height: 70vh;
+        padding: 20px 0;
+    }
+    
+    .sister-card {
+        padding: 20px;
+        margin: 20px 10px;
+    }
+    
+    .sister-avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
     }
 }
 
@@ -718,6 +939,7 @@ body {
     
     .gallery-item {
         aspect-ratio: 3/4;
+        min-height: 300px;
     }
 }
 
@@ -726,5 +948,19 @@ body {
         grid-template-columns: repeat(4, 1fr);
         gap: 30px;
         max-width: 1600px;
+    }
+}
+
+/* Tablet optimizations */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        max-width: 800px;
+    }
+    
+    .gallery-item {
+        aspect-ratio: 3/4;
+        min-height: 250px;
     }
 } 
