@@ -2,11 +2,11 @@
   "name": "rakhi-2k25",
   "version": "1.0.0",
   "description": "A beautiful Rakshabandhan webapp for my sister",
-  "main": "index.html",
+  "main": "server.js",
   "scripts": {
-    "start": "serve -s . -p $PORT",
-    "build": "echo 'Static site - no build required'",
-    "dev": "serve -s . -p 3000"
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "echo 'No build required for Node.js app'"
   },
   "keywords": [
     "rakshabandhan",
@@ -14,12 +14,20 @@
     "webapp",
     "html",
     "css",
-    "javascript"
+    "javascript",
+    "nodejs",
+    "express"
   ],
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "cors": "^2.8.5",
     "serve": "^14.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   },
   "engines": {
     "node": ">=16.0.0"

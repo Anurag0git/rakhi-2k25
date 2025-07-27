@@ -379,44 +379,235 @@ style.textContent = `
 
 document.head.appendChild(style);
 
-// Photo Upload Functionality
-function initializePhotoUpload() {
-    const photoUpload = document.getElementById('photo-upload');
-    const photoGallery = document.getElementById('photo-gallery');
+// Photo Upload Functionality - API-based implementation
+async function initializePhotoUpload() {
+    const uploadInput = document.getElementById('photo-upload');
+    const galleryContainer = document.querySelector('.gallery-container');
     
-    if (photoUpload && photoGallery) {
-        photoUpload.addEventListener('change', function(event) {
-            const files = event.target.files;
+    if (!uploadInput || !galleryContainer) {
+        console.error('Upload elements not found');
+        return;
+    }
+    
+    console.log('Initializing API-based photo upload...');
+    
+    uploadInput.addEventListener('change', async function(e) {
+        const files = Array.from(e.target.files);
+        
+        if (files.length === 0) {
+            console.log('No files selected');
+            return;
+        }
+        
+        console.log(`Uploading ${files.length} files to server...`);
+        
+        try {
+            // Show loading indicator
+            showUploadLoading();
             
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                
-                // Check if file is an image
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    
-                    reader.onload = function(e) {
-                        // Find an empty placeholder to replace
-                        const placeholders = photoGallery.querySelectorAll('.placeholder-photo');
-                        let replaced = false;
-                        
-                        for (let j = 0; j < placeholders.length; j++) {
-                            const placeholder = placeholders[j];
-                            const galleryItem = placeholder.closest('.gallery-item');
-                            
-                            // Check if this placeholder hasn't been replaced yet
-                            if (galleryItem && !galleryItem.classList.contains('uploaded-photo')) {
-                                // Replace placeholder with uploaded image
-                                galleryItem.classList.add('uploaded-photo');
-                                galleryItem.innerHTML = '';
-                                
-                                // Create image element
-                                const img = document.createElement('img');
-                                img.src = e.target.result;
-                                img.alt = 'Your Memory';
-                                img.style.width = '100%';
-                                img.style.height = '100%';
-                                img.style.objectFit = 'cover';
+            // Upload files to server
+            const uploadedPhotos = await window.photoAPI.uploadPhotos(files);
+            console.log('Photos uploaded successfully:', uploadedPhotos);
+            
+            // Add uploaded photos to gallery
+            uploadedPhotos.forEach(photo => {
+                addPhotoToGallery(photo);
+            });
+            
+            // Show success message
+            showUploadSuccess();
+            
+        } catch (error) {
+            console.error('Upload failed:', error);
+            showUploadError(error.message);
+        } finally {
+            // Clear the input
+            uploadInput.value = '';
+            hideUploadLoading();
+        }
+    });
+}
+
+// Add photo to gallery display
+function addPhotoToGallery(photo) {
+    const galleryContainer = document.querySelector('.gallery-container');
+    if (!galleryContainer) return;
+    
+    // Find first available placeholder or create new item
+    let galleryItem = document.querySelector('.gallery-item .placeholder-photo')?.closest('.gallery-item');
+    
+    if (!galleryItem) {
+        // Create new gallery item if no placeholders available
+        galleryItem = document.createElement('div');
+        galleryItem.className = 'gallery-item';
+        galleryContainer.appendChild(galleryItem);
+    }
+    
+    galleryItem.setAttribute('data-caption', photo.originalName);
+    galleryItem.setAttribute('data-photo-id', photo.id);
+    galleryItem.style.position = 'relative';
+    
+    // Create image element
+    const img = document.createElement('img');
+    img.src = photo.url;
+    img.alt = photo.originalName;
+    img.style.cssText = `
+        width: 100%;
+        height: 250px;
+        object-fit: cover;
+        border-radius: 15px;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    `;
+    
+    // Add hover effect
+    img.addEventListener('mouseenter', () => {
+        img.style.transform = 'scale(1.05)';
+    });
+    
+    img.addEventListener('mouseleave', () => {
+        img.style.transform = 'scale(1)';
+    });
+    
+    // Add click handler for modal
+    img.addEventListener('click', () => {
+        showImageModal(photo.originalName, photo.url);
+    });
+    
+    // Clear existing content and add image
+    galleryItem.innerHTML = '';
+    galleryItem.appendChild(img);
+    
+    // Add delete button
+    const deleteBtn = document.createElement('button');
+    deleteBtn.innerHTML = '×';
+    deleteBtn.className = 'delete-photo-btn';
+    deleteBtn.style.cssText = `
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255, 0, 0, 0.8);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    `;
+    
+    deleteBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await deletePhotoFromServer(photo.id, galleryItem);
+    });
+    
+    galleryItem.appendChild(deleteBtn);
+    
+    // Show delete button on hover
+    galleryItem.addEventListener('mouseenter', () => {
+        deleteBtn.style.opacity = '1';
+    });
+    
+    galleryItem.addEventListener('mouseleave', () => {
+        deleteBtn.style.opacity = '0';
+    });
+}
+
+// Delete photo from server
+async function deletePhotoFromServer(photoId, galleryItem) {
+    try {
+        await window.photoAPI.deletePhoto(photoId);
+        
+        // Replace with placeholder
+        galleryItem.innerHTML = `
+            <div class="placeholder-photo">
+                <i class="fas fa-image"></i>
+                <small>Click to add your photo</small>
+            </div>
+        `;
+        galleryItem.removeAttribute('data-photo-id');
+        galleryItem.style.position = '';
+        
+        showDeleteSuccess();
+        
+    } catch (error) {
+        console.error('Delete failed:', error);
+        alert('Failed to delete photo: ' + error.message);
+    }
+}
+
+// Load existing photos from server
+async function loadPhotosFromServer() {
+    try {
+        const photos = await window.photoAPI.getPhotos();
+        console.log('Loaded photos from server:', photos);
+        
+        photos.forEach(photo => {
+            addPhotoToGallery(photo);
+        });
+        
+    } catch (error) {
+        console.error('Failed to load photos:', error);
+    }
+}
+
+// Show upload loading indicator
+function showUploadLoading() {
+    const uploadSection = document.querySelector('.upload-section');
+    if (uploadSection) {
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'upload-loading';
+        loadingDiv.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: #667eea;"></i>
+                <p style="margin-top: 10px; color: #667eea;">Uploading photos...</p>
+            </div>
+        `;
+        uploadSection.appendChild(loadingDiv);
+    }
+}
+
+// Hide upload loading indicator
+function hideUploadLoading() {
+    const loadingDiv = document.getElementById('upload-loading');
+    if (loadingDiv) {
+        loadingDiv.remove();
+    }
+}
+
+// Show upload error
+function showUploadError(message) {
+    const uploadSection = document.querySelector('.upload-section');
+    if (uploadSection) {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            color: #d32f2f;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+        `;
+        errorDiv.innerHTML = `
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Upload Failed:</strong> ${message}
+        `;
+        
+        uploadSection.appendChild(errorDiv);
+        
+        // Remove after 5 seconds
+        setTimeout(() => {
+            errorDiv.remove();
+        }, 5000);
+    }
                                 
                                 // Create delete button
                                 const deleteBtn = document.createElement('button');
@@ -424,122 +615,6 @@ function initializePhotoUpload() {
                                 deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
                                 deleteBtn.title = 'Delete this photo';
                                 
-                                // Add delete functionality
-                                deleteBtn.addEventListener('click', function(e) {
-                                    e.stopPropagation(); // Prevent image modal from opening
-                                    deletePhoto(galleryItem);
-                                });
-                                
-                                // Add image to gallery item
-                                galleryItem.appendChild(img);
-                                galleryItem.appendChild(deleteBtn);
-                                
-                                // Add animation
-                                galleryItem.style.opacity = '0';
-                                galleryItem.style.transform = 'scale(0.8)';
-                                
-                                setTimeout(() => {
-                                    galleryItem.style.transition = 'all 0.5s ease';
-                                    galleryItem.style.opacity = '1';
-                                    galleryItem.style.transform = 'scale(1)';
-                                }, 100);
-                                
-                                // Add hover effect
-                                galleryItem.addEventListener('mouseenter', function() {
-                                    this.style.transform = 'scale(1.03)';
-                                    deleteBtn.style.opacity = '1';
-                                });
-                                
-                                galleryItem.addEventListener('mouseleave', function() {
-                                    this.style.transform = 'scale(1)';
-                                    deleteBtn.style.opacity = '0';
-                                });
-                                
-                                // Add click to enlarge
-                                galleryItem.addEventListener('click', function() {
-                                    showImageModal('Your Memory', e.target.result);
-                                });
-                                
-                                replaced = true;
-                                break;
-                            }
-                        }
-                        
-                        // If no placeholder was found, add as new item
-                        if (!replaced) {
-                            // Create new gallery item
-                            const galleryItem = document.createElement('div');
-                            galleryItem.className = 'gallery-item uploaded-photo';
-                            galleryItem.setAttribute('data-caption', 'Your Memory');
-                            
-                            // Create image element
-                            const img = document.createElement('img');
-                            img.src = e.target.result;
-                            img.alt = 'Your Memory';
-                            img.style.width = '100%';
-                            img.style.height = '100%';
-                            img.style.objectFit = 'cover';
-                            
-                            // Create delete button
-                            const deleteBtn = document.createElement('button');
-                            deleteBtn.className = 'delete-photo-btn';
-                            deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
-                            deleteBtn.title = 'Delete this photo';
-                            
-                            // Add delete functionality
-                            deleteBtn.addEventListener('click', function(e) {
-                                e.stopPropagation();
-                                deletePhoto(galleryItem);
-                            });
-                            
-                            // Add image to gallery item
-                            galleryItem.appendChild(img);
-                            galleryItem.appendChild(deleteBtn);
-                            
-                            // Add to gallery with animation
-                            galleryItem.style.opacity = '0';
-                            galleryItem.style.transform = 'scale(0.8)';
-                            photoGallery.appendChild(galleryItem);
-                            
-                            // Animate in
-                            setTimeout(() => {
-                                galleryItem.style.transition = 'all 0.5s ease';
-                                galleryItem.style.opacity = '1';
-                                galleryItem.style.transform = 'scale(1)';
-                            }, 100);
-                            
-                            // Add hover effect
-                            galleryItem.addEventListener('mouseenter', function() {
-                                this.style.transform = 'scale(1.03)';
-                                deleteBtn.style.opacity = '1';
-                            });
-                            
-                            galleryItem.addEventListener('mouseleave', function() {
-                                this.style.transform = 'scale(1)';
-                                deleteBtn.style.opacity = '0';
-                            });
-                            
-                            // Add click to enlarge
-                            galleryItem.addEventListener('click', function() {
-                                showImageModal('Your Memory', e.target.result);
-                            });
-                        }
-                        
-                        // Save to localStorage
-                        saveUploadedPhotos();
-                        
-                        // Show success message
-                        showUploadSuccess();
-                    };
-                    
-                    reader.readAsDataURL(file);
-                }
-            }
-            
-            // Clear the input
-            event.target.value = '';
-        });
-    }
 }
 
 // Show upload success message
@@ -755,7 +830,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeGallery();
     addSpecialEffects();
     initializePhotoUpload();
-    loadUploadedPhotos();
+    loadPhotosFromServer();
     
     // Initialize message observer
     const messageSection = document.getElementById('message');
