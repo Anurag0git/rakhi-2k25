@@ -7,11 +7,47 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(express.static('.'));
+// Enhanced CORS configuration
+app.use(cors({
+  origin: true, // Reflect the request origin
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
+
+// Middleware to ensure JSON responses for API routes
+app.use('/api', (req, res, next) => {
+  res.setHeader('Content-Type', 'application/json');
+  next();
+});
+
+// Enhanced body parsing with better error handling
+app.use(express.json({ 
+  limit: '50mb',
+  verify: (req, res, buf, encoding) => {
+    // Verify request body is valid
+    try {
+      if (buf.length > 0) {
+        JSON.parse(buf);
+      }
+    } catch (e) {
+      // Not JSON, that's okay for non-API routes
+    }
+  }
+}));
+
+app.use(express.urlencoded({ 
+  extended: true, 
+  limit: '50mb' 
+}));
+
+// Static file serving with error handling
+app.use(express.static('.', {
+  setHeaders: (res, path, stat) => {
+    if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    }
+  }
+}));
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -51,12 +87,16 @@ function writePhotos(data) {
     }
 }
 
-// Configure multer for file uploads
+// Multer configuration for file uploads
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
+    destination: function (req, file, cb) {
+        // Ensure uploads directory exists
+        if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+        }
         cb(null, uploadsDir);
     },
-    filename: (req, file, cb) => {
+    filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, 'photo-' + uniqueSuffix + path.extname(file.originalname));
     }
@@ -68,20 +108,18 @@ const upload = multer({
         fileSize: 10 * 1024 * 1024, // 10MB limit
         files: 10 // Maximum 10 files
     },
-    fileFilter: (req, file, cb) => {
+    fileFilter: function (req, file, cb) {
         // Check file type
         if (file.mimetype.startsWith('image/')) {
             cb(null, true);
         } else {
-            cb(new Error('Only image files are allowed!'), false);
+            cb(new Error('Only image files (JPEG, PNG, GIF, WebP) are allowed!'), false);
         }
     }
-});
+}).array('photos', 10);
 
-// Middleware to ensure all API responses are JSON
-app.use('/api', (req, res, next) => {
-    res.setHeader('Content-Type', 'application/json');
-    next();
+// Handle multer errors globally
+app.use((error, req, res, next) => {
 });
 
 // Handle multer errors
@@ -126,53 +164,64 @@ app.get('/api/photos', (req, res) => {
 });
 
 // Upload photos
-app.post('/api/photos/upload', upload.array('photos', 10), (req, res) => {
+app.post('/api/photos/upload', (req, res) => {
     // Set proper headers
     res.setHeader('Content-Type', 'application/json');
     
-    try {
-        console.log('Upload request received:', {
-            filesCount: req.files ? req.files.length : 0,
-            body: req.body
-        });
-
-        if (!req.files || req.files.length === 0) {
-            console.log('No files uploaded');
-            return res.status(400).json({ success: false, error: 'No files uploaded' });
+    // Handle the upload with our configured multer instance
+    upload(req, res, function (err) {
+        if (err) {
+            console.error('Multer error during upload:', err);
+            return res.status(400).json({ 
+                success: false, 
+                error: `Upload failed: ${err.message}` 
+            });
         }
-
-        const data = readPhotos();
-        const newPhotos = req.files.map(file => {
-            const photo = {
-                id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-                filename: file.filename,
-                originalName: file.originalname,
-                url: `/uploads/${file.filename}`,
-                uploadDate: new Date().toISOString(),
-                size: file.size
-            };
-            console.log('Created photo object:', photo);
-            return photo;
-        });
-
-        data.photos.push(...newPhotos);
         
-        if (writePhotos(data)) {
-            const response = { 
-                success: true, 
-                message: `${newPhotos.length} photo(s) uploaded successfully`,
-                photos: newPhotos 
-            };
-            console.log('Upload successful, sending response:', response);
-            res.json(response);
-        } else {
-            console.log('Failed to save photo data');
-            res.status(500).json({ success: false, error: 'Failed to save photo data' });
+        try {
+            console.log('Upload request received:', {
+                filesCount: req.files ? req.files.length : 0,
+                body: req.body
+            });
+
+            if (!req.files || req.files.length === 0) {
+                console.log('No files uploaded');
+                return res.status(400).json({ success: false, error: 'No files uploaded' });
+            }
+
+            const data = readPhotos();
+            const newPhotos = req.files.map(file => {
+                const photo = {
+                    id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                    filename: file.filename,
+                    originalName: file.originalname,
+                    url: `/uploads/${file.filename}`,
+                    uploadDate: new Date().toISOString(),
+                    size: file.size
+                };
+                console.log('Created photo object:', photo);
+                return photo;
+            });
+
+            data.photos.push(...newPhotos);
+            
+            if (writePhotos(data)) {
+                const response = { 
+                    success: true, 
+                    message: `${newPhotos.length} photo(s) uploaded successfully`,
+                    photos: newPhotos 
+                };
+                console.log('Upload successful, sending response:', response);
+                res.json(response);
+            } else {
+                console.log('Failed to save photo data');
+                res.status(500).json({ success: false, error: 'Failed to save photo data' });
+            }
+        } catch (error) {
+            console.error('Error uploading photos:', error);
+            res.status(500).json({ success: false, error: 'Upload failed: ' + error.message });
         }
-    } catch (error) {
-        console.error('Error uploading photos:', error);
-        res.status(500).json({ success: false, error: 'Upload failed: ' + error.message });
-    }
+    });
 });
 
 // Delete a photo

@@ -44,6 +44,18 @@ class PhotoAPI {
     // Upload photos to server
     async uploadPhotos(files) {
         try {
+            // Validate files first
+            if (!files || files.length === 0) {
+                throw new Error('No files selected for upload');
+            }
+            
+            // Check file sizes
+            for (let file of files) {
+                if (file.size > 10 * 1024 * 1024) { // 10MB
+                    throw new Error(`File ${file.name} is too large. Maximum size is 10MB.`);
+                }
+            }
+            
             const formData = new FormData();
             
             // Add all files to FormData
@@ -51,14 +63,30 @@ class PhotoAPI {
                 formData.append('photos', file);
             });
 
+            console.log('Uploading files:', files.length);
+            
             const response = await fetch(`${this.baseURL}/api/photos/upload`, {
                 method: 'POST',
                 body: formData
             });
 
+            console.log('Upload response:', {
+                status: response.status,
+                statusText: response.statusText,
+                headers: [...response.headers.entries()]
+            });
+
             // Check if response is ok
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                // Try to get error message from response
+                let errorMessage = `HTTP error! status: ${response.status}`;
+                try {
+                    const errorText = await response.text();
+                    errorMessage = `Server error (${response.status}): ${errorText.substring(0, 200)}`;
+                } catch (e) {
+                    // Ignore if we can't read the error
+                }
+                throw new Error(errorMessage);
             }
 
             // Check if response has content
@@ -71,10 +99,17 @@ class PhotoAPI {
                     contentType: contentType,
                     responseText: text
                 });
+                
+                // If it's HTML, it might be an error page
+                if (contentType && contentType.includes('text/html')) {
+                    throw new Error(`Server configuration error. Please check server logs. Received HTML instead of JSON.`);
+                }
+                
                 throw new Error(`Server returned non-JSON response (${response.status}): ${text.substring(0, 200)}${text.length > 200 ? '...' : ''}`);
             }
 
             const data = await response.json();
+            console.log('Upload response data:', data);
             
             if (data.success) {
                 return data.photos;
@@ -84,7 +119,7 @@ class PhotoAPI {
         } catch (error) {
             console.error('Error uploading photos:', error);
             if (error.message.includes('Unexpected end of JSON input')) {
-                throw new Error('Server error: Empty response received. Please check server logs.');
+                throw new Error('Server connection error. Please try again or check server logs.');
             }
             throw error;
         }
