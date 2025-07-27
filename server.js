@@ -95,35 +95,51 @@ app.get('/api/photos', (req, res) => {
 
 // Upload photos
 app.post('/api/photos/upload', upload.array('photos', 10), (req, res) => {
+    // Set proper headers
+    res.setHeader('Content-Type', 'application/json');
+    
     try {
+        console.log('Upload request received:', {
+            filesCount: req.files ? req.files.length : 0,
+            body: req.body
+        });
+
         if (!req.files || req.files.length === 0) {
+            console.log('No files uploaded');
             return res.status(400).json({ success: false, error: 'No files uploaded' });
         }
 
         const data = readPhotos();
-        const newPhotos = req.files.map(file => ({
-            id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-            filename: file.filename,
-            originalName: file.originalname,
-            url: `/uploads/${file.filename}`,
-            uploadDate: new Date().toISOString(),
-            size: file.size
-        }));
+        const newPhotos = req.files.map(file => {
+            const photo = {
+                id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                filename: file.filename,
+                originalName: file.originalname,
+                url: `/uploads/${file.filename}`,
+                uploadDate: new Date().toISOString(),
+                size: file.size
+            };
+            console.log('Created photo object:', photo);
+            return photo;
+        });
 
         data.photos.push(...newPhotos);
         
         if (writePhotos(data)) {
-            res.json({ 
+            const response = { 
                 success: true, 
                 message: `${newPhotos.length} photo(s) uploaded successfully`,
                 photos: newPhotos 
-            });
+            };
+            console.log('Upload successful, sending response:', response);
+            res.json(response);
         } else {
+            console.log('Failed to save photo data');
             res.status(500).json({ success: false, error: 'Failed to save photo data' });
         }
     } catch (error) {
         console.error('Error uploading photos:', error);
-        res.status(500).json({ success: false, error: 'Upload failed' });
+        res.status(500).json({ success: false, error: 'Upload failed: ' + error.message });
     }
 });
 
@@ -175,9 +191,27 @@ app.use((error, req, res, next) => {
     res.status(500).json({ success: false, error: error.message });
 });
 
+// Global error handler
+app.use((error, req, res, next) => {
+    console.error('Global error handler:', error);
+    if (!res.headersSent) {
+        res.status(500).json({ 
+            success: false, 
+            error: 'Internal server error: ' + error.message 
+        });
+    }
+});
+
+// Handle 404 for API routes
+app.use('/api/*', (req, res) => {
+    res.status(404).json({ 
+        success: false, 
+        error: 'API endpoint not found' 
+    });
+});
+
 // Start server
 app.listen(PORT, () => {
-    console.log(`🎀 Rakhi 2025 server running on port ${PORT}`);
-    console.log(`📸 Photo uploads will be saved to: ${uploadsDir}`);
-    console.log(`🗄️ Database file: ${dbPath}`);
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Access the app at: http://localhost:${PORT}`);
 });

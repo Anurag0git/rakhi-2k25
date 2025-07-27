@@ -36,6 +36,18 @@ class PhotoAPI {
                 body: formData
             });
 
+            // Check if response is ok
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            // Check if response has content
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                throw new Error(`Server returned non-JSON response: ${text}`);
+            }
+
             const data = await response.json();
             
             if (data.success) {
@@ -45,6 +57,9 @@ class PhotoAPI {
             }
         } catch (error) {
             console.error('Error uploading photos:', error);
+            if (error.message.includes('Unexpected end of JSON input')) {
+                throw new Error('Server error: Empty response received. Please check server logs.');
+            }
             throw error;
         }
     }
