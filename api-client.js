@@ -4,6 +4,26 @@ class PhotoAPI {
         this.baseURL = window.location.origin;
     }
 
+    // Test API connectivity
+    async testConnection() {
+        try {
+            const response = await fetch(`${this.baseURL}/api/test`);
+            console.log('Test response status:', response.status);
+            console.log('Test response headers:', [...response.headers.entries()]);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('Test response data:', data);
+            return data;
+        } catch (error) {
+            console.error('API test failed:', error);
+            throw error;
+        }
+    }
+
     // Get all photos from server
     async getPhotos() {
         try {
@@ -45,7 +65,13 @@ class PhotoAPI {
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
                 const text = await response.text();
-                throw new Error(`Server returned non-JSON response: ${text}`);
+                console.error('Non-JSON response received:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    contentType: contentType,
+                    responseText: text
+                });
+                throw new Error(`Server returned non-JSON response (${response.status}): ${text.substring(0, 200)}${text.length > 200 ? '...' : ''}`);
             }
 
             const data = await response.json();

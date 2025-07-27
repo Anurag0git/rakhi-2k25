@@ -65,22 +65,54 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB limit
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+        files: 10 // Maximum 10 files
     },
     fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|gif|webp/;
-        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-        const mimetype = allowedTypes.test(file.mimetype);
-
-        if (mimetype && extname) {
-            return cb(null, true);
+        // Check file type
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
         } else {
-            cb(new Error('Only image files are allowed!'));
+            cb(new Error('Only image files are allowed!'), false);
         }
     }
 });
 
+// Middleware to ensure all API responses are JSON
+app.use('/api', (req, res, next) => {
+    res.setHeader('Content-Type', 'application/json');
+    next();
+});
+
+// Handle multer errors
+app.use('/api/photos/upload', (error, req, res, next) => {
+    if (error instanceof multer.MulterError) {
+        console.error('Multer error:', error);
+        return res.status(400).json({
+            success: false,
+            error: `Upload error: ${error.message}`
+        });
+    } else if (error) {
+        console.error('Upload error:', error);
+        return res.status(400).json({
+            success: false,
+            error: error.message || 'Upload failed'
+        });
+    }
+    next();
+});
+
 // API Routes
+
+// Test endpoint to verify API is working
+app.get('/api/test', (req, res) => {
+    console.log('Test endpoint called');
+    res.json({ 
+        success: true, 
+        message: 'API is working', 
+        timestamp: new Date().toISOString() 
+    });
+});
 
 // Get all photos
 app.get('/api/photos', (req, res) => {
