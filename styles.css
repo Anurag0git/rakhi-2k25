@@ -369,9 +369,7 @@ body {
     position: relative;
 }
 
-.message-content.typed p.typing-complete {
-    /* No special styling */
-}
+
 
 /* Ensure message text is readable during typing */
 .message-content p {
@@ -489,16 +487,17 @@ body {
     transform: scale(1.03);
 }
 
-.gallery-item img {
+.gallery-photo {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s ease;
     border-radius: 16px;
+    cursor: pointer;
 }
 
-.gallery-item:hover img {
+.gallery-item:hover .gallery-photo {
     transform: scale(1.05);
 }
 
@@ -686,30 +685,45 @@ body {
 
 /* Mobile-Optimized Responsive Design */
 @media (max-width: 768px) {
-    /* Compact navigation */
+    /* Better touch targets and spacing for mobile */
+    * {
+        -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+    
+    /* Compact navigation with better touch targets */
     .navbar {
-        padding: 10px 0;
-        background: rgba(0, 0, 0, 0.2);
+        padding: 8px 0;
+        background: rgba(0, 0, 0, 0.4);
         backdrop-filter: blur(15px);
+        position: fixed;
+        top: 0;
+        z-index: 1000;
+        width: 100%;
     }
     
     .nav-content {
         flex-direction: column;
-        gap: 10px;
-        padding: 0 15px;
+        gap: 8px;
+        padding: 0 16px;
+        max-width: 100%;
     }
     
     .nav-title {
-        font-size: 22px;
-        margin-bottom: 5px;
+        font-size: 20px;
+        margin-bottom: 4px;
+        text-align: center;
     }
     
     .nav-links {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 5px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
         width: 100%;
-        max-width: 400px;
+        max-width: 300px;
+        margin: 0 auto;
     }
     
     .nav-link {
@@ -721,28 +735,52 @@ body {
         display: flex;
         align-items: center;
         justify-content: center;
+        font-weight: 600;
+        transition: all 0.2s ease;
     }
     
-    /* Compact sections */
+    .nav-link:active {
+        transform: scale(0.95);
+        background: rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Compact sections with better spacing - fix header overlap */
     .section {
-        padding: 70px 12px 30px;
+        padding: 120px 16px 40px;
         min-height: auto;
     }
     
     .section-container {
         max-width: 100%;
+        padding: 0;
     }
     
     .section-title {
-        font-size: 28px;
-        margin-bottom: 20px;
+        font-size: 32px;
+        margin-bottom: 24px;
         line-height: 1.2;
+        padding: 0 8px;
     }
     
     /* Hero section mobile optimization */
     .hero-container {
-        min-height: 75vh;
-        padding: 15px 0;
+        min-height: 60vh;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .hero-content {
+        text-align: center;
+        width: 100%;
+        max-width: 320px;
+        margin: 0 auto;
+        padding: 0 16px;
+    }
+    
+    .title-animation {
+        margin-bottom: 20px;
     }
     
     .main-title {
@@ -753,38 +791,46 @@ body {
     
     .subtitle {
         font-size: 16px;
-        margin-bottom: 15px;
+        margin-bottom: 16px;
+    }
+    
+    .sister-info {
+        margin: 20px 0;
     }
     
     .sister-card {
-        padding: 20px 15px;
-        margin: 20px 0;
-        max-width: 320px;
-        width: 100%;
+        padding: 20px 16px;
+        margin: 16px auto;
+        max-width: 280px;
+        width: calc(100% - 32px);
+        border-radius: 12px;
+    }
+    
+    .sister-avatar {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+        margin-bottom: 12px;
     }
     
     .sister-card h3 {
         font-size: 16px;
+        margin-bottom: 6px;
         line-height: 1.3;
     }
     
     .sister-card p {
         font-size: 13px;
+        line-height: 1.4;
     }
     
-    .sister-avatar {
-        width: 60px;
-        height: 60px;
-        font-size: 24px;
-        margin-bottom: 15px;
-    }
-    
-    /* Compact CTA buttons */
+    /* Better CTA buttons for mobile */
     .cta-buttons {
         flex-direction: column;
         gap: 10px;
-        align-items: center;
         margin-top: 20px;
+        align-items: center;
+        padding: 0 16px;
     }
     
     .cta-btn {
@@ -792,300 +838,709 @@ body {
         max-width: 260px;
         padding: 12px 20px;
         font-size: 14px;
-        border-radius: 20px;
+        border-radius: 10px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
     }
     
-    .message-card {
-        padding: 25px 20px;
-        margin: 0 10px;
+
+/* Base styles are mobile-first */
+
+/* Enhanced touch interactions for mobile */
+* {
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Responsive Navigation */
+.navbar {
+    padding: clamp(8px, 2vw, 15px) 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(15px);
+    position: fixed;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+}
+
+.nav-content {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(6px, 1.5vw, 12px);
+    padding: 0 clamp(16px, 4vw, 20px);
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.nav-title {
+    font-size: clamp(20px, 5vw, 28px);
+    margin-bottom: clamp(2px, 1vw, 4px);
+    text-align: center;
+    font-family: 'Dancing Script', cursive;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.nav-links {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: clamp(4px, 1vw, 8px);
+    width: 100%;
+    max-width: clamp(280px, 80vw, 400px);
+    margin: 0 auto;
+}
+
+.nav-link {
+    font-size: clamp(11px, 3vw, 16px);
+    padding: clamp(6px, 2vw, 8px) clamp(4px, 1vw, 16px);
+    border-radius: clamp(6px, 2vw, 20px);
+    text-align: center;
+    min-height: clamp(32px, 8vw, 44px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+.nav-link:active,
+.nav-link:hover {
+    transform: scale(0.95);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.nav-link.active {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive Sections */
+.section {
+    padding: clamp(140px, 30vw, 160px) clamp(16px, 4vw, 20px) clamp(30px, 8vw, 50px);
+    min-height: auto;
+    display: none;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s ease;
+}
+
+.section.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.section-container {
+    max-width: min(100%, 1200px);
+    margin: 0 auto;
+    padding: 0;
+}
+
+.section-title {
+    font-size: clamp(24px, 8vw, 48px);
+    margin-bottom: clamp(20px, 5vw, 50px);
+    line-height: 1.2;
+    text-align: center;
+    color: white;
+    font-family: 'Dancing Script', cursive;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive Hero Section */
+.hero-container {
+    min-height: clamp(50vh, 70vh, 80vh);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-content {
+    text-align: center;
+    width: 100%;
+    max-width: clamp(280px, 90vw, 800px);
+    margin: 0 auto;
+    padding: 0 clamp(16px, 4vw, 20px);
+    z-index: 2;
+}
+
+.title-animation {
+    margin-bottom: clamp(20px, 5vw, 40px);
+}
+
+.main-title {
+    font-size: clamp(28px, 10vw, 72px);
+    font-family: 'Dancing Script', cursive;
+    color: white;
+    margin-bottom: clamp(8px, 2vw, 10px);
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
+    animation: fadeInUp 1s ease-out;
+}
+
+.subtitle {
+    font-size: clamp(16px, 6vw, 32px);
+    color: #ffd93d;
+    font-weight: 300;
+    animation: fadeInUp 1s ease-out 0.3s both;
+}
+
+/* Responsive Sister Info */
+.sister-info {
+    margin: clamp(20px, 5vw, 40px) 0;
+    animation: fadeInUp 1s ease-out 0.6s both;
+}
+
+.sister-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: clamp(12px, 3vw, 20px);
+    padding: clamp(16px, 4vw, 30px);
+    margin: clamp(16px, 4vw, 20px) auto;
+    max-width: clamp(280px, 80vw, 500px);
+    width: calc(100% - 32px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: inline-block;
+}
+
+.sister-avatar {
+    width: clamp(50px, 12vw, 80px);
+    height: clamp(50px, 12vw, 80px);
+    background: linear-gradient(45deg, #ff6b9d, #ff8e53);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(20px, 5vw, 32px);
+    margin: 0 auto clamp(12px, 3vw, 20px);
+    color: white;
+}
+
+.sister-card h3 {
+    font-size: clamp(16px, 4vw, 24px);
+    margin-bottom: clamp(6px, 1.5vw, 10px);
+    line-height: 1.3;
+    color: white;
+    text-align: center;
+}
+
+.sister-card p {
+    font-size: clamp(13px, 3.5vw, 16px);
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+}
+
+/* Responsive CTA Buttons */
+.cta-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(8px, 2vw, 15px);
+    margin-top: clamp(20px, 5vw, 30px);
+    align-items: center;
+    padding: 0 clamp(16px, 4vw, 0px);
+}
+
+.cta-btn {
+    width: 100%;
+    max-width: clamp(260px, 70vw, 300px);
+    padding: clamp(10px, 3vw, 15px) clamp(16px, 4vw, 25px);
+    font-size: clamp(13px, 3.5vw, 16px);
+    border-radius: clamp(10px, 2.5vw, 25px);
+    min-height: clamp(40px, 10vw, 50px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(6px, 1.5vw, 10px);
+    background: linear-gradient(45deg, #ff6b9d, #ff8e53);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.cta-btn:active,
+.cta-btn:hover {
+    transform: scale(0.98);
+}
+
+/* Responsive Message Section */
+.message-container {
+    padding: 0 clamp(16px, 4vw, 20px);
+}
+
+.message-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: clamp(12px, 3vw, 20px);
+    padding: clamp(16px, 4vw, 30px);
+    margin: clamp(16px, 4vw, 30px) auto;
+    max-width: clamp(320px, 90vw, 800px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.message-header {
+    margin-bottom: clamp(12px, 3vw, 20px);
+    font-size: clamp(16px, 4vw, 24px);
+    color: #ff6b9d;
+    display: flex;
+    align-items: center;
+    gap: clamp(8px, 2vw, 15px);
+    font-weight: 600;
+}
+
+.message-header i {
+    font-size: clamp(16px, 4vw, 24px);
+}
+
+.message-content {
+    text-align: left;
+}
+
+.message-content p {
+    font-size: clamp(13px, 3.5vw, 16px);
+    line-height: 1.5;
+    margin-bottom: clamp(12px, 3vw, 20px);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.signature {
+    font-size: clamp(12px, 3vw, 16px) !important;
+    margin-top: clamp(16px, 4vw, 20px);
+    text-align: right;
+    font-style: italic;
+    color: #ffd93d !important;
+    font-weight: 600;
+}
+
+/* Responsive Gallery Section */
+.gallery-container {
+    padding: 0 clamp(16px, 4vw, 20px);
+    margin: 0 auto;
+    max-width: 100%;
+}
+
+.gallery-subtitle {
+    font-size: clamp(16px, 4vw, 20px);
+    margin-bottom: clamp(16px, 4vw, 25px);
+    text-align: center;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(140px, 40vw, 200px), 1fr));
+    gap: clamp(8px, 2vw, 20px);
+    max-width: clamp(320px, 90vw, 800px);
+    margin: 0 auto;
+    justify-items: center;
+}
+
+.gallery-item {
+    width: 100%;
+    aspect-ratio: 1;
+    max-width: clamp(140px, 40vw, 200px);
+    border-radius: clamp(10px, 2.5vw, 16px);
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.gallery-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.gallery-item:active,
+.gallery-item:hover {
+    transform: scale(0.98);
+}
+
+.gallery-item:active .gallery-photo,
+.gallery-item:hover .gallery-photo {
+    transform: scale(1.05);
+}
+
+/* Responsive Wishes Section */
+.wishes-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(250px, 70vw, 300px), 1fr));
+    gap: clamp(10px, 3vw, 20px);
+    padding: 0 clamp(16px, 4vw, 20px);
+    max-width: clamp(320px, 90vw, 1000px);
+    margin: 0 auto;
+}
+
+.wish-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: clamp(10px, 2.5vw, 15px);
+    padding: clamp(12px, 3vw, 20px);
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.wish-card:active,
+.wish-card:hover {
+    transform: scale(0.98);
+}
+
+.wish-icon {
+    font-size: clamp(20px, 6vw, 32px);
+    margin-bottom: clamp(6px, 2vw, 12px);
+    display: block;
+    color: #ff6b9d;
+}
+
+.wish-card h3 {
+    font-size: clamp(14px, 3.5vw, 18px);
+    margin-bottom: clamp(4px, 1vw, 8px);
+    color: white;
+    font-weight: 600;
+}
+
+.wish-card p {
+    font-size: clamp(12px, 3vw, 14px);
+    line-height: 1.3;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+}
+
+/* Responsive Final Message */
+.final-message {
+    padding: clamp(16px, 4vw, 30px);
+    text-align: center;
+    margin-top: clamp(16px, 4vw, 30px);
+    max-width: clamp(320px, 80vw, 600px);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.final-message h3 {
+    font-size: clamp(18px, 5vw, 28px);
+    margin-bottom: clamp(10px, 3vw, 20px);
+    color: white;
+    font-weight: 600;
+    font-family: 'Dancing Script', cursive;
+}
+
+.final-message p {
+    font-size: clamp(13px, 3.5vw, 16px);
+    line-height: 1.4;
+    margin-bottom: clamp(16px, 4vw, 30px);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.rakhi-tying-animation {
+    margin-top: clamp(12px, 3vw, 15px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.rakhi-knot {
+    font-size: clamp(24px, 8vw, 48px);
+    animation: bounce 2s infinite;
+}
+
+/* Responsive Floating Elements */
+.floating-heart,
+.floating-sparkle {
+    font-size: clamp(14px, 4vw, 20px);
+}
+
+/* Responsive Music Controls */
+.music-controls {
+    position: fixed;
+    bottom: clamp(15px, 4vw, 20px);
+    right: clamp(15px, 4vw, 20px);
+    z-index: 1000;
+}
+
+.music-btn {
+    width: clamp(40px, 10vw, 50px);
+    height: clamp(40px, 10vw, 50px);
+    font-size: clamp(16px, 4vw, 20px);
+    background: rgba(255, 107, 157, 0.9);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.music-btn:hover {
+    transform: scale(1.1);
+    background: rgba(255, 107, 157, 1);
+}
+
+/* ============================================
+   RESPONSIVE BREAKPOINTS FOR LARGER SCREENS
+   ============================================ */
+
+/* Tablet Layout (768px - 1023px) */
+@media (min-width: 768px) {
+    /* Override mobile-first navigation for tablet+ */
+    .nav-content {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 clamp(20px, 4vw, 40px);
     }
     
-    .message-content p {
-        font-size: 15px;
-        line-height: 1.7;
-        margin-bottom: 18px;
+    .nav-title {
+        margin-bottom: 0;
+        text-align: left;
     }
     
+    .nav-links {
+        display: flex;
+        grid-template-columns: none;
+        gap: clamp(15px, 3vw, 20px);
+        max-width: none;
+        margin: 0;
+    }
+    
+    .nav-link {
+        min-height: auto;
+        padding: clamp(8px, 2vw, 12px) clamp(12px, 3vw, 16px);
+    }
+    
+    /* Tablet hero adjustments */
+    .hero-container {
+        min-height: 80vh;
+    }
+    
+    .main-title {
+        font-size: clamp(48px, 8vw, 64px);
+    }
+    
+    .subtitle {
+        font-size: clamp(24px, 4vw, 28px);
+    }
+    
+    /* Tablet CTA buttons - horizontal layout */
+    .cta-buttons {
+        flex-direction: row;
+        justify-content: center;
+        gap: clamp(15px, 3vw, 20px);
+    }
+    
+    .cta-btn {
+        width: auto;
+        min-width: clamp(180px, 25vw, 220px);
+    }
+    
+    /* Tablet gallery - 3 columns */
     .gallery-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-        padding: 0 10px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: clamp(15px, 3vw, 20px);
+        max-width: clamp(600px, 85vw, 900px);
     }
     
     .gallery-item {
-        aspect-ratio: 3/4;
-        min-height: 200px;
+        max-width: none;
     }
     
-    .upload-card {
-        padding: 25px 20px;
-        margin: 0 10px;
+    /* Tablet wishes - 2 columns */
+    .wishes-container {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: clamp(600px, 85vw, 800px);
+    }
+}
+
+/* Desktop Layout (1024px+) */
+@media (min-width: 1024px) {
+    /* Desktop navigation */
+    .navbar {
+        padding: 15px 0;
     }
     
-    .upload-card h3 {
-        font-size: 20px;
+    .nav-content {
+        max-width: 1200px;
+        padding: 0 20px;
     }
     
-    .upload-card p {
-        font-size: 14px;
+    .nav-title {
+        font-size: 28px;
     }
     
-    .upload-btn {
-        padding: 12px 24px;
-        font-size: 14px;
+    .nav-link {
+        font-size: 16px;
+        padding: 8px 16px;
     }
     
-    .gallery-subtitle {
+    /* Desktop sections */
+    .section {
+        padding: 100px 20px 50px;
+        min-height: 100vh;
+    }
+    
+    .section-title {
+        font-size: 48px;
+        margin-bottom: 50px;
+    }
+    
+    /* Desktop hero */
+    .hero-container {
+        min-height: 80vh;
+    }
+    
+    .hero-content {
+        max-width: 800px;
+    }
+    
+    .main-title {
+        font-size: 72px;
+    }
+    
+    .subtitle {
+        font-size: 32px;
+    }
+    
+    /* Desktop sister card */
+    .sister-card {
+        max-width: 500px;
+        padding: 30px;
+    }
+    
+    .sister-avatar {
+        width: 80px;
+        height: 80px;
+        font-size: 32px;
+        margin-bottom: 20px;
+    }
+    
+    .sister-card h3 {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+    
+    .sister-card p {
+        font-size: 16px;
+    }
+    
+    /* Desktop CTA buttons */
+    .cta-buttons {
+        flex-direction: row;
+        gap: 20px;
+    }
+    
+    .cta-btn {
+        width: auto;
+        min-width: 200px;
+        padding: 15px 25px;
+        font-size: 16px;
+    }
+    
+    /* Desktop message cards */
+    .message-card {
+        max-width: 800px;
+        padding: 30px;
+    }
+    
+    .message-header {
         font-size: 24px;
         margin-bottom: 20px;
     }
     
+    .message-content p {
+        font-size: 16px;
+        margin-bottom: 20px;
+    }
+    
+    /* Desktop gallery - 4 columns */
+    .gallery-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 25px;
+        max-width: 1000px;
+    }
+    
+    .gallery-item {
+        aspect-ratio: 1;
+        max-width: 200px;
+    }
+    
+    /* Desktop wishes - 3 columns */
     .wishes-container {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, 1fr);
         gap: 20px;
-        padding: 0 10px;
+        max-width: 1000px;
     }
     
     .wish-card {
-        padding: 25px 20px;
+        padding: 20px;
+    }
+    
+    .wish-icon {
+        font-size: 32px;
+        margin-bottom: 12px;
     }
     
     .wish-card h3 {
         font-size: 18px;
+        margin-bottom: 8px;
     }
     
     .wish-card p {
         font-size: 14px;
     }
     
-    .section-title {
-        font-size: 36px;
+    /* Desktop final message */
+    .final-message {
+        max-width: 600px;
+        padding: 30px;
+    }
+    
+    .final-message h3 {
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+    
+    .final-message p {
+        font-size: 16px;
         margin-bottom: 30px;
-        line-height: 1.2;
     }
     
-    .section {
-        padding: 80px 10px 40px;
+    .rakhi-knot {
+        font-size: 48px;
     }
 }
 
-@media (max-width: 480px) {
-    .section {
-        padding: 70px 8px 30px;
-    }
-    
-    .main-title {
-        font-size: 32px;
-    }
-    
-    .subtitle {
-        font-size: 18px;
-    }
-    
-    .section-title {
-        font-size: 28px;
-        margin-bottom: 25px;
-    }
-    
-    .message-card {
-        padding: 15px;
-        margin: 15px 0;
-        max-width: 100%;
-    }
-    
-    .message-card h3 {
-        font-size: 18px;
-        margin-bottom: 10px;
-    }
-    
-    .message-card p {
-        font-size: 14px;
-        line-height: 1.5;
-    }
-    
-    .message-content p {
-        font-size: 14px;
-        line-height: 1.6;
-        margin-bottom: 15px;
-    }
-    
-    .gallery-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-        padding: 0 10px;
-        justify-items: stretch;
-        align-items: stretch;
-    }
-    
-    .gallery-item {
-        width: 100%;
-        height: 160px;
-        border-radius: 15px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .gallery-item img {
-        border-radius: 12px;
-    }
-    
-    .delete-btn {
-        width: 24px;
-        height: 24px;
-        font-size: 12px;
-        top: 5px;
-        right: 5px;
-    }
-    
-    .upload-area {
-        padding: 20px 15px;
-        margin: 15px 0;
-        border-radius: 15px;
-    }
-    
-    .upload-area h3 {
-        font-size: 16px;
-        margin-bottom: 8px;
-    }
-    
-    .upload-area p {
-        font-size: 13px;
-        margin-bottom: 15px;
-    }
-    
-    .upload-btn {
-        padding: 10px 18px;
-        font-size: 13px;
-        border-radius: 15px;
-    }
-    
-    .wish-item {
-        padding: 12px;
-        margin: 8px 0;
-        border-radius: 12px;
-    }
-    
-    .wish-item h4 {
-        font-size: 15px;
-        margin-bottom: 5px;
-    }
-    
-    .wish-item p {
-        font-size: 13px;
-        line-height: 1.4;
-    }
-    
-    .floating-heart {
-        font-size: 18px;
-    }
-    
-    .floating-sparkle {
-        font-size: 14px;
-    }
-    
-    .music-controls {
-        bottom: 15px;
-        right: 15px;
-    }
-    
-    .music-btn {
-        width: 45px;
-        height: 45px;
-        font-size: 18px;
-    }
-    
-    .nav-title {
-        font-size: 22px;
-    }
-    
-    .nav-link {
-        font-size: 13px;
-        padding: 5px 10px;
-    }
-    
-    .cta-btn {
-        padding: 10px 20px;
-        font-size: 14px;
-    }
-}
-
-/* Android-specific fixes */
-@media (max-width: 360px) {
-    .main-title {
-        font-size: 28px;
-    }
-    
-    .subtitle {
-        font-size: 16px;
-    }
-    
-    .section-title {
-        font-size: 24px;
-    }
-    
-    .message-content p {
-        font-size: 13px;
-    }
-    
-    .gallery-item {
-        min-height: 200px;
-    }
-}
-
-/* Ensure proper viewport handling */
-@media screen and (max-width: 768px) {
-    .hero-container {
-        min-height: 70vh;
-        padding: 20px 0;
-    }
-    
-    .sister-card {
-        padding: 20px;
-        margin: 20px 10px;
-    }
-    
-    .sister-avatar {
-        width: 60px;
-        height: 60px;
-        font-size: 24px;
-    }
-}
-
-/* Desktop specific optimizations */
-@media (min-width: 1024px) {
-    .gallery-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 25px;
-        max-width: 1400px;
-    }
-    
-    .gallery-item {
-        aspect-ratio: 3/4;
-        min-height: 300px;
-    }
-}
-
+/* Large Desktop Layout (1200px+) */
 @media (min-width: 1200px) {
-    .gallery-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 30px;
-        max-width: 1600px;
-    }
-}
-
-
-
-/* Tablet optimizations */
-@media (min-width: 768px) and (max-width: 1023px) {
-    .gallery-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-        max-width: 800px;
+    .section-container {
+        max-width: 1200px;
     }
     
-    .gallery-item {
-        aspect-ratio: 3/4;
-        min-height: 250px;
+    .gallery-grid {
+        max-width: 1200px;
+        gap: 30px;
+    }
+    
+    .wishes-container {
+        max-width: 1200px;
     }
 } 
+}

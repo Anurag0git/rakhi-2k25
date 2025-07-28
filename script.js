@@ -101,20 +101,13 @@ function createFloatingElements() {
     });
 }
 
-// Gallery functionality
+// Gallery functionality - Simplified for static photos
 function initializeGallery() {
     const galleryItems = document.querySelectorAll('.gallery-item');
     
-    // Debug: Log the number of gallery items found
-    console.log(`Found ${galleryItems.length} gallery items`);
-    
     galleryItems.forEach((item, index) => {
-        const img = item.querySelector('img');
-        const placeholder = item.querySelector('.placeholder-photo');
-        const caption = item.getAttribute('data-caption') || `Photo ${index + 1}`;
-        
-        // Debug: Log each item
-        console.log(`Gallery item ${index + 1}: ${caption} - ${img ? 'Has image' : 'Placeholder'}`);
+        const img = item.querySelector('.gallery-photo');
+        const caption = item.getAttribute('data-caption') || `Memory ${index + 1}`;
         
         if (img) {
             // Add error handling for images
@@ -124,54 +117,29 @@ function initializeGallery() {
                 item.innerHTML = `
                     <div class="placeholder-photo">
                         <i class="fas fa-image"></i>
-                        <small>Click to add your photo</small>
+                        <small>Image not found</small>
                     </div>
                 `;
-                // Make the new placeholder clickable
-                const newPlaceholder = item.querySelector('.placeholder-photo');
-                if (newPlaceholder) {
-                    newPlaceholder.addEventListener('click', () => {
-                        document.getElementById('photo-upload').click();
-                    });
-                }
             });
             
-            // Add load success handler
-            img.addEventListener('load', function() {
-                console.log(`Successfully loaded image: ${this.src}`);
-            });
-            
-            // Add click to enlarge for images
-            item.addEventListener('click', () => {
-                if (img && img.src) {
-                    showImageModal(caption, img.src);
-                }
+            // Add click handler for image modal
+            img.addEventListener('click', () => {
+                showImageModal(caption, img.src);
             });
         }
         
-        if (placeholder) {
-            // Make placeholder clickable to trigger file upload
-            placeholder.addEventListener('click', () => {
-                document.getElementById('photo-upload').click();
-            });
-        }
+        // Add hover effects
+        item.addEventListener('mouseenter', () => {
+            item.style.transform = 'scale(1.05)';
+        });
+        
+        item.addEventListener('mouseleave', () => {
+            item.style.transform = 'scale(1)';
+        });
     });
     
-    // Verify all images are present
-    setTimeout(() => {
-        const loadedImages = document.querySelectorAll('.gallery-item img');
-        const placeholders = document.querySelectorAll('.gallery-item .placeholder-photo');
-        console.log(`Total loaded images: ${loadedImages.length}`);
-        console.log(`Total placeholders: ${placeholders.length}`);
-        
-        loadedImages.forEach((img, index) => {
-            if (img.complete && img.naturalHeight !== 0) {
-                console.log(`Image ${index + 1} loaded successfully: ${img.src}`);
-            } else {
-                console.warn(`Image ${index + 1} may not have loaded: ${img.src}`);
-            }
-        });
-    }, 1000);
+    // Create modal for image viewing
+    createImageModal();
 }
 
 function showImageModal(caption, imageSrc) {
@@ -379,515 +347,74 @@ style.textContent = `
 
 document.head.appendChild(style);
 
-// Photo Upload Functionality - API-based implementation
-async function initializePhotoUpload() {
-    const uploadInput = document.getElementById('photo-upload');
-    const galleryContainer = document.querySelector('.gallery-container');
+function createImageModal() {
+    // Check if modal already exists
+    if (document.getElementById('image-modal')) return;
     
-    if (!uploadInput || !galleryContainer) {
-        console.error('Upload elements not found');
-        return;
-    }
-    
-    console.log('Initializing API-based photo upload...');
-    
-    uploadInput.addEventListener('change', async function(e) {
-        const files = Array.from(e.target.files);
-        
-        if (files.length === 0) {
-            console.log('No files selected');
-            return;
-        }
-        
-        console.log(`Uploading ${files.length} files to server...`);
-        
-        try {
-            // Show loading indicator
-            showUploadLoading();
-            
-            // Upload files to server
-            const uploadedPhotos = await window.photoAPI.uploadPhotos(files);
-            console.log('Photos uploaded successfully:', uploadedPhotos);
-            
-            // Add uploaded photos to gallery
-            uploadedPhotos.forEach(photo => {
-                addPhotoToGallery(photo);
-            });
-            
-            // Show success message
-            showUploadSuccess();
-            
-        } catch (error) {
-            console.error('Upload failed:', error);
-            showUploadError(error.message);
-        } finally {
-            // Clear the input
-            uploadInput.value = '';
-            hideUploadLoading();
-        }
-    });
-}
-
-// Add photo to gallery display
-function addPhotoToGallery(photo) {
-    const galleryContainer = document.querySelector('.gallery-container');
-    if (!galleryContainer) return;
-    
-    // Find first available placeholder or create new item
-    let galleryItem = document.querySelector('.gallery-item .placeholder-photo')?.closest('.gallery-item');
-    
-    if (!galleryItem) {
-        // Create new gallery item if no placeholders available
-        galleryItem = document.createElement('div');
-        galleryItem.className = 'gallery-item';
-        galleryContainer.appendChild(galleryItem);
-    }
-    
-    galleryItem.setAttribute('data-caption', photo.originalName);
-    galleryItem.setAttribute('data-photo-id', photo.id);
-    galleryItem.style.position = 'relative';
-    
-    // Create image element
-    const img = document.createElement('img');
-    img.src = photo.url;
-    img.alt = photo.originalName;
-    img.style.cssText = `
+    const modal = document.createElement('div');
+    modal.id = 'image-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
         width: 100%;
-        height: 250px;
-        object-fit: cover;
-        border-radius: 15px;
-        cursor: pointer;
-        transition: transform 0.3s ease;
-    `;
-    
-    // Add hover effect
-    img.addEventListener('mouseenter', () => {
-        img.style.transform = 'scale(1.05)';
-    });
-    
-    img.addEventListener('mouseleave', () => {
-        img.style.transform = 'scale(1)';
-    });
-    
-    // Add click handler for modal
-    img.addEventListener('click', () => {
-        showImageModal(photo.originalName, photo.url);
-    });
-    
-    // Clear existing content and add image
-    galleryItem.innerHTML = '';
-    galleryItem.appendChild(img);
-    
-    // Add delete button
-    const deleteBtn = document.createElement('button');
-    deleteBtn.innerHTML = '×';
-    deleteBtn.className = 'delete-photo-btn';
-    deleteBtn.style.cssText = `
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: rgba(255, 0, 0, 0.8);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        cursor: pointer;
-        font-size: 18px;
-        font-weight: bold;
-        display: flex;
-        align-items: center;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: none;
         justify-content: center;
-        z-index: 10;
-        opacity: 0;
-        transition: opacity 0.3s ease;
+        align-items: center;
+        z-index: 10000;
+        backdrop-filter: blur(10px);
     `;
     
-    deleteBtn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        await deletePhotoFromServer(photo.id, galleryItem);
-    });
-    
-    galleryItem.appendChild(deleteBtn);
-    
-    // Show delete button on hover
-    galleryItem.addEventListener('mouseenter', () => {
-        deleteBtn.style.opacity = '1';
-    });
-    
-    galleryItem.addEventListener('mouseleave', () => {
-        deleteBtn.style.opacity = '0';
-    });
-}
-
-// Delete photo from server
-async function deletePhotoFromServer(photoId, galleryItem) {
-    try {
-        await window.photoAPI.deletePhoto(photoId);
-        
-        // Replace with placeholder
-        galleryItem.innerHTML = `
-            <div class="placeholder-photo">
-                <i class="fas fa-image"></i>
-                <small>Click to add your photo</small>
-            </div>
-        `;
-        galleryItem.removeAttribute('data-photo-id');
-        galleryItem.style.position = '';
-        
-        showDeleteSuccess();
-        
-    } catch (error) {
-        console.error('Delete failed:', error);
-        alert('Failed to delete photo: ' + error.message);
-    }
-}
-
-// Load existing photos from server
-async function loadPhotosFromServer() {
-    try {
-        const photos = await window.photoAPI.getPhotos();
-        console.log('Loaded photos from server:', photos);
-        
-        photos.forEach(photo => {
-            addPhotoToGallery(photo);
-        });
-        
-    } catch (error) {
-        console.error('Failed to load photos:', error);
-    }
-}
-
-// Show upload loading indicator
-function showUploadLoading() {
-    const uploadSection = document.querySelector('.upload-section');
-    if (uploadSection) {
-        const loadingDiv = document.createElement('div');
-        loadingDiv.id = 'upload-loading';
-        loadingDiv.innerHTML = `
-            <div style="text-align: center; padding: 20px;">
-                <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: #667eea;"></i>
-                <p style="margin-top: 10px; color: #667eea;">Uploading photos...</p>
-            </div>
-        `;
-        uploadSection.appendChild(loadingDiv);
-    }
-}
-
-// Hide upload loading indicator
-function hideUploadLoading() {
-    const loadingDiv = document.getElementById('upload-loading');
-    if (loadingDiv) {
-        loadingDiv.remove();
-    }
-}
-
-// Show upload error
-function showUploadError(message) {
-    const uploadSection = document.querySelector('.upload-section');
-    if (uploadSection) {
-        const errorDiv = document.createElement('div');
-        errorDiv.style.cssText = `
-            background: rgba(255, 0, 0, 0.1);
-            border: 1px solid rgba(255, 0, 0, 0.3);
-            color: #d32f2f;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 15px;
-            text-align: center;
-        `;
-        errorDiv.innerHTML = `
-            <i class="fas fa-exclamation-triangle"></i>
-            <strong>Upload Failed:</strong> ${message}
-        `;
-        
-        uploadSection.appendChild(errorDiv);
-        
-        // Remove after 5 seconds
-        setTimeout(() => {
-            errorDiv.remove();
-        }, 5000);
-    }
-                                
-                                // Create delete button
-                                const deleteBtn = document.createElement('button');
-                                deleteBtn.className = 'delete-photo-btn';
-                                deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
-                                deleteBtn.title = 'Delete this photo';
-                                
-}
-
-// Show upload success message
-function showUploadSuccess() {
-    const successMessage = document.createElement('div');
-    successMessage.className = 'upload-success';
-    successMessage.innerHTML = `
-        <div class="success-content">
-            <i class="fas fa-check-circle"></i>
-            <p>Photo added successfully!</p>
+    modal.innerHTML = `
+        <div style="position: relative; max-width: 90%; max-height: 90%; text-align: center;">
+            <img id="modal-image" style="max-width: 100%; max-height: 100%; border-radius: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);">
+            <h3 id="modal-caption" style="color: white; margin-top: 20px; font-family: 'Dancing Script', cursive; font-size: 24px;"></h3>
+            <button id="close-modal" style="position: absolute; top: -40px; right: -40px; background: rgba(255, 255, 255, 0.2); border: none; color: white; font-size: 24px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; backdrop-filter: blur(10px);">×</button>
         </div>
     `;
     
-    successMessage.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: linear-gradient(45deg, #4CAF50, #45a049);
-        color: white;
-        padding: 15px 25px;
-        border-radius: 10px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        z-index: 10000;
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
-    `;
+    document.body.appendChild(modal);
     
-    document.body.appendChild(successMessage);
-    
-    // Animate in
-    setTimeout(() => {
-        successMessage.style.transform = 'translateX(0)';
-    }, 100);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-        successMessage.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            if (successMessage.parentNode) {
-                document.body.removeChild(successMessage);
-            }
-        }, 300);
-    }, 3000);
-}
-
-// Save uploaded photos to localStorage
-function saveUploadedPhotos() {
-    const galleryItems = document.querySelectorAll('#photo-gallery .gallery-item');
-    const uploadedPhotos = [];
-    
-    galleryItems.forEach((item, index) => {
-        const img = item.querySelector('img');
-        if (img && img.src.startsWith('data:')) {
-            uploadedPhotos.push({
-                src: img.src,
-                alt: img.alt,
-                index: index
-            });
+    // Close modal handlers
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
         }
     });
     
-    localStorage.setItem('uploadedPhotos', JSON.stringify(uploadedPhotos));
+    document.getElementById('close-modal').addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+    
+    // ESC key to close
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.style.display === 'flex') {
+            modal.style.display = 'none';
+        }
+    });
 }
 
-// Load uploaded photos from localStorage
-function loadUploadedPhotos() {
-    const savedPhotos = localStorage.getItem('uploadedPhotos');
-    const photoGallery = document.getElementById('photo-gallery');
-    
-    if (savedPhotos && photoGallery) {
-        const uploadedPhotos = JSON.parse(savedPhotos);
-        
-        uploadedPhotos.forEach(photoData => {
-            const galleryItem = document.createElement('div');
-            galleryItem.className = 'gallery-item';
-            galleryItem.setAttribute('data-caption', photoData.alt);
-            
-            const img = document.createElement('img');
-            img.src = photoData.src;
-            img.alt = photoData.alt;
-            img.style.width = '100%';
-            img.style.height = '100%';
-            img.style.objectFit = 'cover';
-            
-            galleryItem.appendChild(img);
-            photoGallery.appendChild(galleryItem);
-            
-            // Add hover effect
-            galleryItem.addEventListener('mouseenter', function() {
-                this.style.transform = 'scale(1.03)';
-            });
-            
-            galleryItem.addEventListener('mouseleave', function() {
-                this.style.transform = 'scale(1)';
-            });
-            
-            // Add click to enlarge
-            galleryItem.addEventListener('click', function() {
-                showImageModal(photoData.alt, photoData.src);
-            });
-        });
-    }
-}
 
-// Delete photo function
-function deletePhoto(galleryItem) {
-    // Show confirmation
-    if (confirm('Are you sure you want to delete this photo?')) {
-        // Animate out
-        galleryItem.style.transition = 'all 0.3s ease';
-        galleryItem.style.opacity = '0';
-        galleryItem.style.transform = 'scale(0.8)';
-        
-        // Remove after animation and restore placeholder
-        setTimeout(() => {
-            if (galleryItem.parentNode) {
-                // Get the index of the deleted item
-                const photoGallery = document.getElementById('photo-gallery');
-                const items = Array.from(photoGallery.children);
-                const deletedIndex = items.indexOf(galleryItem);
-                
-                // Remove the uploaded photo
-                galleryItem.parentNode.removeChild(galleryItem);
-                
-                // Restore placeholder at the same position
-                const placeholder = document.createElement('div');
-                placeholder.className = 'placeholder-photo';
-                placeholder.innerHTML = `
-                    <i class="fas fa-image"></i>
-                    <small>Click to add your photo</small>
-                `;
-                
-                // Make placeholder clickable
-                placeholder.addEventListener('click', () => {
-                    document.getElementById('photo-upload').click();
-                });
-                
-                // Create new gallery item with placeholder
-                const newGalleryItem = document.createElement('div');
-                newGalleryItem.className = 'gallery-item';
-                newGalleryItem.setAttribute('data-caption', `Photo ${deletedIndex + 1}`);
-                newGalleryItem.appendChild(placeholder);
-                
-                // Insert at the same position
-                if (deletedIndex < items.length) {
-                    photoGallery.insertBefore(newGalleryItem, items[deletedIndex]);
-                } else {
-                    photoGallery.appendChild(newGalleryItem);
-                }
-                
-                // Animate in the new placeholder
-                newGalleryItem.style.opacity = '0';
-                newGalleryItem.style.transform = 'scale(0.8)';
-                setTimeout(() => {
-                    newGalleryItem.style.transition = 'all 0.5s ease';
-                    newGalleryItem.style.opacity = '1';
-                    newGalleryItem.style.transform = 'scale(1)';
-                }, 100);
-                
-                saveUploadedPhotos(); // Update localStorage
-                showDeleteSuccess();
-            }
-        }, 300);
-    }
-}
 
-// Show delete success message
-function showDeleteSuccess() {
-    const successMessage = document.createElement('div');
-    successMessage.className = 'delete-success';
-    successMessage.innerHTML = `
-        <div class="success-content">
-            <i class="fas fa-trash-alt"></i>
-            <p>Photo deleted successfully!</p>
-        </div>
-    `;
-    
-    successMessage.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: linear-gradient(45deg, #ff6b6b, #ee5a52);
-        color: white;
-        padding: 15px 25px;
-        border-radius: 10px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        z-index: 10000;
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
-    `;
-    
-    document.body.appendChild(successMessage);
-    
-    // Animate in
-    setTimeout(() => {
-        successMessage.style.transform = 'translateX(0)';
-    }, 100);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-        successMessage.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            if (successMessage.parentNode) {
-                document.body.removeChild(successMessage);
-            }
-        }, 300);
-    }, 3000);
-}
+
+
+
 
 // Initialize everything
 document.addEventListener('DOMContentLoaded', () => {
     createFloatingElements();
     initializeGallery();
     addSpecialEffects();
-    initializePhotoUpload();
-    loadPhotosFromServer();
     
     // Initialize message observer
     const messageSection = document.getElementById('message');
     if (messageSection) {
         messageObserver.observe(messageSection);
     }
-    
-    // Verify all images are loaded after a delay
-    setTimeout(() => {
-        verifyAllImagesLoaded();
-    }, 2000);
-    
-    // Save photos when page is about to unload
-    window.addEventListener('beforeunload', saveUploadedPhotos);
 });
 
-// Verify all images are loaded
-function verifyAllImagesLoaded() {
-    const galleryItems = document.querySelectorAll('#photo-gallery .gallery-item');
-    console.log(`Verifying ${galleryItems.length} gallery items...`);
-    
-    let loadedCount = 0;
-    let errorCount = 0;
-    
-    galleryItems.forEach((item, index) => {
-        const img = item.querySelector('img');
-        if (img) {
-            if (img.complete && img.naturalHeight !== 0) {
-                loadedCount++;
-                console.log(`✅ Image ${index + 1} loaded successfully: ${img.src}`);
-            } else {
-                errorCount++;
-                console.error(`❌ Image ${index + 1} failed to load: ${img.src}`);
-                
-                // Create fallback
-                item.innerHTML = `
-                    <div class="placeholder-photo">
-                        <i class="fas fa-image"></i>
-                        <p>Photo ${index + 1}</p>
-                        <small>Click to add your photo</small>
-                    </div>
-                `;
-                
-                // Make it clickable to add photo
-                item.addEventListener('click', () => {
-                    document.getElementById('photo-upload').click();
-                });
-            }
-        }
-    });
-    
-    console.log(`📊 Image loading summary: ${loadedCount} loaded, ${errorCount} failed`);
-    
-    if (errorCount > 0) {
-        console.warn(`⚠️ ${errorCount} images failed to load. Check file paths and ensure all images are in the repository.`);
-    }
-}
 
 // Parallax effect for floating elements
 window.addEventListener('scroll', () => {
